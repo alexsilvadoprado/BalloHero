@@ -1,13 +1,20 @@
 package com.posmobile.ballohero;
 
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
-public class Principal extends AppCompatActivity {
+import com.posmobile.ballohero.AndGraph.AGActivityGame;
 
+public class Principal extends AGActivityGame
+{
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState)
+    {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_principal);
+
+        init(this, false);
+
+        TelaSplash tela_splash = new TelaSplash(this.vrManager);
+
+        vrManager.addScene(tela_splash);
     }
 }
