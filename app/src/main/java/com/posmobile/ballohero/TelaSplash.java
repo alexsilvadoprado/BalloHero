@@ -24,7 +24,7 @@ public class TelaSplash extends AGScene
         logo_apresentacao.setScreenPercent(80, 12);
         logo_apresentacao.vrPosition.setX(AGScreenManager.iScreenWidth / 2);
         logo_apresentacao.vrPosition.setY(AGScreenManager.iScreenHeight / 2);
-        logo_apresentacao.fadeIn(3000);
+        logo_apresentacao.fadeIn(2000);
     }
 
     @Override
