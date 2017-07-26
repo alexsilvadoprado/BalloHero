@@ -4,9 +4,11 @@ import com.posmobile.ballohero.AndGraph.AGGameManager;
 import com.posmobile.ballohero.AndGraph.AGScene;
 import com.posmobile.ballohero.AndGraph.AGScreenManager;
 import com.posmobile.ballohero.AndGraph.AGSprite;
+import com.posmobile.ballohero.AndGraph.AGTimer;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class TelaJogo extends AGScene
 {
@@ -26,6 +28,10 @@ public class TelaJogo extends AGScene
     int[] vetor_cod_inimigos = new int[4];
     int prox_inimigo = 0;
 
+    float[] vetor_pos_inimigos = new float[5];
+
+    AGTimer tempo_geracao_inimigos = null;
+
     TelaJogo(AGGameManager vrManager)
     {
         super(vrManager);
@@ -42,10 +48,18 @@ public class TelaJogo extends AGScene
         vetor_cod_inimigos[2] = R.mipmap.prego;
         vetor_cod_inimigos[3] = R.mipmap.dardo;
 
+        vetor_pos_inimigos[0] = AGScreenManager.iScreenWidth / 2;
+        vetor_pos_inimigos[1] = AGScreenManager.iScreenWidth / 3.2f;
+        vetor_pos_inimigos[2] = AGScreenManager.iScreenWidth / 8;
+        vetor_pos_inimigos[3] = AGScreenManager.iScreenWidth - AGScreenManager.iScreenWidth / 3.2f;
+        vetor_pos_inimigos[4] = AGScreenManager.iScreenWidth - AGScreenManager.iScreenWidth / 8;
+
         vetor_emojis = new ArrayList<AGSprite>();
         vetor_mamonas = new ArrayList<AGSprite>();
         vetor_pregos = new ArrayList<AGSprite>();
         vetor_dardos = new ArrayList<AGSprite>();
+
+        tempo_geracao_inimigos = new AGTimer(1000);
 
 //        balao = createSprite(R.mipmap.sprite_balao, 1, 4);
 //        balao.setScreenPercent(20, 20);
@@ -96,7 +110,7 @@ public class TelaJogo extends AGScene
         {
             inimigo.setScreenPercent(15, 8);
             inimigo.addAnimation(8, false, 0, 3);
-            inimigo.vrPosition.setX(AGScreenManager.iScreenWidth / 2);
+            inimigo.vrPosition.setX(vetor_pos_inimigos[new Random().nextInt(5)]);
             inimigo.vrPosition.setY(AGScreenManager.iScreenHeight + inimigo.getSpriteHeight());
             vetor_emojis.add(inimigo);
 
@@ -105,7 +119,7 @@ public class TelaJogo extends AGScene
         else if(prox_inimigo == 1)
         {
             inimigo.setScreenPercent(15, 8);
-            inimigo.vrPosition.setX(AGScreenManager.iScreenWidth / 2);
+            inimigo.vrPosition.setX(vetor_pos_inimigos[new Random().nextInt(5)]);
             inimigo.vrPosition.setY(AGScreenManager.iScreenHeight + inimigo.getSpriteHeight());
             vetor_mamonas.add(inimigo);
 
@@ -114,7 +128,7 @@ public class TelaJogo extends AGScene
         else if(prox_inimigo == 2)
         {
             inimigo.setScreenPercent(8, 8);
-            inimigo.vrPosition.setX(AGScreenManager.iScreenWidth / 8);
+            inimigo.vrPosition.setX(vetor_pos_inimigos[new Random().nextInt(5)]);
             inimigo.vrPosition.setY(AGScreenManager.iScreenHeight + inimigo.getSpriteHeight());
             vetor_pregos.add(inimigo);
 
@@ -123,7 +137,7 @@ public class TelaJogo extends AGScene
         else if(prox_inimigo == 3)
         {
             inimigo.setScreenPercent(8, 8);
-            inimigo.vrPosition.setX(AGScreenManager.iScreenWidth / 8);
+            inimigo.vrPosition.setX(vetor_pos_inimigos[new Random().nextInt(5)]);
             inimigo.vrPosition.setY(AGScreenManager.iScreenHeight + inimigo.getSpriteHeight());
             vetor_dardos.add(inimigo);
 
