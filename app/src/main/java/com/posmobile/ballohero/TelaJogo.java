@@ -36,7 +36,7 @@ public class TelaJogo extends AGScene
     @Override
     public void init()
     {
-        createSprite(R.mipmap.sprite_balao, 4, 1).bVisible = false;
+        createSprite(R.mipmap.sprite_balao, 4, 2).bVisible = false;
         createSprite(R.mipmap.sprite_emoji, 4, 1).bVisible = false;
 
         vetor_cod_inimigos[0] = R.mipmap.sprite_emoji;
@@ -57,11 +57,13 @@ public class TelaJogo extends AGScene
 
         tempo_geracao_inimigos = new AGTimer(1000);
 
-        balao = createSprite(R.mipmap.sprite_balao, 4, 1);
+        balao = createSprite(R.mipmap.sprite_balao, 4, 2);
         balao.setScreenPercent(20, 20);
-        balao.addAnimation(10, false, 0, 1);
+        balao.addAnimation(10, true, 0, 3);
+        balao.addAnimation(15, false, 4, 7);
         balao.vrPosition.setX(AGScreenManager.iScreenWidth / 2);
-        balao.vrPosition.setY(balao.getSpriteHeight());
+        balao.vrPosition.setY(balao.getSpriteHeight() / 2);
+        balao.setCurrentAnimation(1);
     }
 
     @Override
@@ -259,10 +261,20 @@ public class TelaJogo extends AGScene
         {
             if(AGInputManager.vrTouchEvents.getLastPosition().fX < AGScreenManager.iScreenWidth / 2)
             {
-                balao.vrPosition.fX += 40;
+                balao.vrPosition.fX += 50;
+
+                if(balao.vrPosition.getX() > AGScreenManager.iScreenWidth - balao.getSpriteWidth() / 2)
+                {
+                    balao.vrPosition.setX(AGScreenManager.iScreenWidth - balao.getSpriteWidth() / 2);
+                }
             } else
             {
-                balao.vrPosition.fX -= 40;
+                balao.vrPosition.fX -= 50;
+
+                if(balao.vrPosition.getX() < balao.getSpriteWidth() / 2)
+                {
+                    balao.vrPosition.setX(balao.getSpriteWidth() / 2);
+                }
             }
         }
     }
