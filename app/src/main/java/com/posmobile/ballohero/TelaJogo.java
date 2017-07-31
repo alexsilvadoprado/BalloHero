@@ -1,6 +1,7 @@
 package com.posmobile.ballohero;
 
 import com.posmobile.ballohero.AndGraph.AGGameManager;
+import com.posmobile.ballohero.AndGraph.AGInputManager;
 import com.posmobile.ballohero.AndGraph.AGScene;
 import com.posmobile.ballohero.AndGraph.AGScreenManager;
 import com.posmobile.ballohero.AndGraph.AGSprite;
@@ -14,11 +15,6 @@ public class TelaJogo extends AGScene
 {
 
     AGSprite balao = null;
-    AGSprite emoji_do_mal = null;
-
-    AGSprite mamona = null;
-    AGSprite prego = null;
-    AGSprite dardo = null;
 
     List<AGSprite> vetor_emojis = null;
     List<AGSprite> vetor_mamonas = null;
@@ -61,32 +57,11 @@ public class TelaJogo extends AGScene
 
         tempo_geracao_inimigos = new AGTimer(1000);
 
-//        balao = createSprite(R.mipmap.sprite_balao, 1, 4);
-//        balao.setScreenPercent(20, 20);
-//        balao.addAnimation(10, false, 0, 1);
-//        balao.vrPosition.setX(AGScreenManager.iScreenWidth / 2);
-//        balao.vrPosition.setY(balao.getSpriteHeight());
-
-        emoji_do_mal = createSprite(R.mipmap.sprite_emoji, 4, 1);
-        emoji_do_mal.setScreenPercent(15, 8);
-        emoji_do_mal.addAnimation(8, false, 0, 3);
-        emoji_do_mal.vrPosition.setX(AGScreenManager.iScreenWidth / 2);
-        emoji_do_mal.vrPosition.setY(AGScreenManager.iScreenHeight / 2);
-
-        mamona = createSprite(R.mipmap.mamona, 1, 1);
-        mamona.setScreenPercent(15, 8);
-        mamona.vrPosition.setX(AGScreenManager.iScreenWidth / 2);
-        mamona.vrPosition.setY(emoji_do_mal.vrPosition.fY - emoji_do_mal.getSpriteHeight());
-
-        prego = createSprite(R.mipmap.prego, 1, 1);
-        prego.setScreenPercent(8, 8);
-        prego.vrPosition.setX(AGScreenManager.iScreenWidth / 2);
-        prego.vrPosition.setY(mamona.vrPosition.fY - mamona.getSpriteHeight());
-
-        dardo = createSprite(R.mipmap.dardo, 1, 1);
-        dardo.setScreenPercent(8, 8);
-        dardo.vrPosition.setX(AGScreenManager.iScreenWidth / 2);
-        dardo.vrPosition.setY(prego.vrPosition.fY - prego.getSpriteHeight());
+        balao = createSprite(R.mipmap.sprite_balao, 4, 1);
+        balao.setScreenPercent(20, 20);
+        balao.addAnimation(10, false, 0, 1);
+        balao.vrPosition.setX(AGScreenManager.iScreenWidth / 2);
+        balao.vrPosition.setY(balao.getSpriteHeight());
     }
 
     @Override
@@ -101,55 +76,145 @@ public class TelaJogo extends AGScene
         criaInimigo();
 
         atualizaInimigos();
+
+        verificaToque();
     }
 
     private void criaInimigo()
     {
+        tempo_geracao_inimigos.update();
+
+        if(!tempo_geracao_inimigos.isTimeEnded())
+        {
+            return;
+        }
+
+        tempo_geracao_inimigos.restart();
+        if (prox_inimigo == 0)
+        {
+            criaEmoji();
+        } else if (prox_inimigo == 1)
+        {
+            criaMamona();
+        } else if (prox_inimigo == 2)
+        {
+            criaPrego();
+        } else if (prox_inimigo == 3)
+        {
+            criaDardo();
+        }
+    }
+
+    private void criaEmoji()
+    {
+        for(AGSprite emoji : vetor_emojis)
+        {
+            if(emoji.bRecycled)
+            {
+                emoji.bRecycled = false;
+                emoji.bVisible = true;
+                emoji.vrPosition.setXY(vetor_pos_inimigos[new Random().nextInt(5)],
+                        AGScreenManager.iScreenHeight + emoji.getSpriteHeight());
+
+                prox_inimigo = 1;
+
+                return;
+            }
+        }
+
         AGSprite inimigo = createSprite(vetor_cod_inimigos[prox_inimigo], prox_inimigo == 0 ? 4 : 1, 1);
-        if(prox_inimigo == 0)
-        {
-            inimigo.setScreenPercent(15, 8);
-            inimigo.addAnimation(8, false, 0, 3);
-            inimigo.vrPosition.setX(vetor_pos_inimigos[new Random().nextInt(5)]);
-            inimigo.vrPosition.setY(AGScreenManager.iScreenHeight + inimigo.getSpriteHeight());
-            vetor_emojis.add(inimigo);
+        inimigo.setScreenPercent(15, 8);
+        inimigo.addAnimation(8, true, 0, 3);
+        inimigo.vrPosition.setX(vetor_pos_inimigos[new Random().nextInt(5)]);
+        inimigo.vrPosition.setY(AGScreenManager.iScreenHeight + inimigo.getSpriteHeight());
+        vetor_emojis.add(inimigo);
 
-            prox_inimigo = 1;
-        }
-        else if(prox_inimigo == 1)
-        {
-            inimigo.setScreenPercent(15, 8);
-            inimigo.vrPosition.setX(vetor_pos_inimigos[new Random().nextInt(5)]);
-            inimigo.vrPosition.setY(AGScreenManager.iScreenHeight + inimigo.getSpriteHeight());
-            vetor_mamonas.add(inimigo);
+        prox_inimigo = 1;
+    }
 
-            prox_inimigo = 2;
-        }
-        else if(prox_inimigo == 2)
+    private void criaMamona()
+    {
+        for(AGSprite mamona : vetor_mamonas)
         {
-            inimigo.setScreenPercent(8, 8);
-            inimigo.vrPosition.setX(vetor_pos_inimigos[new Random().nextInt(5)]);
-            inimigo.vrPosition.setY(AGScreenManager.iScreenHeight + inimigo.getSpriteHeight());
-            vetor_pregos.add(inimigo);
+            if(mamona.bRecycled)
+            {
+                mamona.bRecycled = false;
+                mamona.bVisible = true;
+                mamona.vrPosition.setXY(vetor_pos_inimigos[new Random().nextInt(5)],
+                        AGScreenManager.iScreenHeight + mamona.getSpriteHeight());
 
-            prox_inimigo = 3;
+                prox_inimigo = 2;
+
+                return;
+            }
         }
-        else if(prox_inimigo == 3)
+
+        AGSprite inimigo = createSprite(vetor_cod_inimigos[prox_inimigo], prox_inimigo == 0 ? 4 : 1, 1);
+        inimigo.setScreenPercent(15, 8);
+        inimigo.vrPosition.setX(vetor_pos_inimigos[new Random().nextInt(5)]);
+        inimigo.vrPosition.setY(AGScreenManager.iScreenHeight + inimigo.getSpriteHeight());
+        vetor_mamonas.add(inimigo);
+
+        prox_inimigo = 2;
+    }
+
+    private void criaPrego()
+    {
+        for(AGSprite prego : vetor_pregos)
         {
-            inimigo.setScreenPercent(8, 8);
-            inimigo.vrPosition.setX(vetor_pos_inimigos[new Random().nextInt(5)]);
-            inimigo.vrPosition.setY(AGScreenManager.iScreenHeight + inimigo.getSpriteHeight());
-            vetor_dardos.add(inimigo);
+            if(prego.bRecycled)
+            {
+                prego.bRecycled = false;
+                prego.bVisible = true;
+                prego.vrPosition.setXY(vetor_pos_inimigos[new Random().nextInt(5)],
+                        AGScreenManager.iScreenHeight + prego.getSpriteHeight());
 
-            prox_inimigo = 0;
+                prox_inimigo = 3;
+
+                return;
+            }
         }
+
+        AGSprite inimigo = createSprite(vetor_cod_inimigos[prox_inimigo], prox_inimigo == 0 ? 4 : 1, 1);
+        inimigo.setScreenPercent(8, 8);
+        inimigo.vrPosition.setX(vetor_pos_inimigos[new Random().nextInt(5)]);
+        inimigo.vrPosition.setY(AGScreenManager.iScreenHeight + inimigo.getSpriteHeight());
+        vetor_pregos.add(inimigo);
+
+        prox_inimigo = 3;
+    }
+
+    private void criaDardo()
+    {
+        for(AGSprite dardo : vetor_dardos)
+        {
+            if(dardo.bRecycled)
+            {
+                dardo.bRecycled = false;
+                dardo.bVisible = true;
+                dardo.vrPosition.setXY(vetor_pos_inimigos[new Random().nextInt(5)],
+                        AGScreenManager.iScreenHeight + dardo.getSpriteHeight());
+
+                prox_inimigo = 0;
+
+                return;
+            }
+        }
+
+        AGSprite inimigo = createSprite(vetor_cod_inimigos[prox_inimigo], prox_inimigo == 0 ? 4 : 1, 1);
+        inimigo.setScreenPercent(8, 8);
+        inimigo.vrPosition.setX(vetor_pos_inimigos[new Random().nextInt(5)]);
+        inimigo.vrPosition.setY(AGScreenManager.iScreenHeight + inimigo.getSpriteHeight());
+        vetor_dardos.add(inimigo);
+
+        prox_inimigo = 0;
     }
 
     private void atualizaInimigos()
     {
         for(AGSprite emoji : vetor_emojis)
         {
-            emoji.vrPosition.fY -= 20;
+            emoji.vrPosition.fY -= 15;
             if(emoji.vrPosition.fY < ((emoji.getSpriteHeight() / 2) * -1))
             {
                 emoji.bRecycled = true;
@@ -159,7 +224,7 @@ public class TelaJogo extends AGScene
 
         for(AGSprite mamona : vetor_mamonas)
         {
-            mamona.vrPosition.fY -= 20;
+            mamona.vrPosition.fY -= 15;
             if(mamona.vrPosition.fY < ((mamona.getSpriteHeight() / 2) * -1))
             {
                 mamona.bRecycled = true;
@@ -169,7 +234,7 @@ public class TelaJogo extends AGScene
 
         for(AGSprite prego : vetor_pregos)
         {
-            prego.vrPosition.fY -= 20;
+            prego.vrPosition.fY -= 15;
             if(prego.vrPosition.fY < ((prego.getSpriteHeight() / 2) * -1))
             {
                 prego.bRecycled = true;
@@ -179,7 +244,7 @@ public class TelaJogo extends AGScene
 
         for(AGSprite dardo : vetor_dardos)
         {
-            dardo.vrPosition.fY -= 20;
+            dardo.vrPosition.fY -= 15;
             if(dardo.vrPosition.fY < ((dardo.getSpriteHeight() / 2) * -1))
             {
                 dardo.bRecycled = true;
@@ -187,4 +252,21 @@ public class TelaJogo extends AGScene
             }
         }
     }
+
+    private void verificaToque()
+    {
+        if(AGInputManager.vrTouchEvents.screenClicked())
+        {
+            if(AGInputManager.vrTouchEvents.getLastPosition().fX < AGScreenManager.iScreenWidth / 2)
+            {
+                balao.vrPosition.fX += 40;
+            } else
+            {
+                balao.vrPosition.fX -= 40;
+            }
+        }
+    }
+
+    private void verificaColisao()
+    {}
 }
