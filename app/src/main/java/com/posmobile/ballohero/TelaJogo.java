@@ -63,7 +63,7 @@ public class TelaJogo extends AGScene
         balao.addAnimation(15, false, 4, 7);
         balao.vrPosition.setX(AGScreenManager.iScreenWidth / 2);
         balao.vrPosition.setY(balao.getSpriteHeight() / 2);
-        balao.setCurrentAnimation(1);
+//        balao.setCurrentAnimation(1);
     }
 
     @Override
@@ -80,6 +80,8 @@ public class TelaJogo extends AGScene
         atualizaInimigos();
 
         verificaToque();
+
+        verificaColisao();
     }
 
     private void criaInimigo()
@@ -280,5 +282,37 @@ public class TelaJogo extends AGScene
     }
 
     private void verificaColisao()
-    {}
+    {
+        for(AGSprite emoji : vetor_emojis)
+        {
+            if(balao.collide(emoji))
+            {
+                balao.setCurrentAnimation(1);
+            }
+        }
+
+        for(AGSprite mamona : vetor_mamonas)
+        {
+            if(balao.collide(mamona))
+            {
+                balao.setCurrentAnimation(1);
+            }
+        }
+
+        for(AGSprite prego : vetor_pregos)
+        {
+            if(balao.collide(prego))
+            {
+                balao.setCurrentAnimation(1);
+            }
+        }
+
+        for(AGSprite dardo : vetor_dardos)
+        {
+            if(balao.collide(dardo))
+            {
+                balao.setCurrentAnimation(1);
+            }
+        }
+    }
 }
