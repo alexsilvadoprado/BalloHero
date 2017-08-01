@@ -21,17 +21,17 @@ public class TelaMenu extends AGScene
     @Override
     public void init()
     {
-        btn_play = createSprite(R.mipmap.play_button, 1, 1);
+        btn_play = createSprite(R.mipmap.botao_jogar, 1, 1);
         btn_play.setScreenPercent(70, 10);
         btn_play.vrPosition.setX(AGScreenManager.iScreenWidth / 2);
         btn_play.vrPosition.setY(AGScreenManager.iScreenHeight - AGScreenManager.iScreenHeight / 3);
 
-        btn_sobre = createSprite(R.mipmap.play_button, 1, 1);
+        btn_sobre = createSprite(R.mipmap.botao_sobre, 1, 1);
         btn_sobre.setScreenPercent(70, 10);
         btn_sobre.vrPosition.setX(AGScreenManager.iScreenWidth / 2);
         btn_sobre.vrPosition.setY(AGScreenManager.iScreenHeight / 2);
 
-        btn_sair = createSprite(R.mipmap.play_button, 1, 1);
+        btn_sair = createSprite(R.mipmap.botao_sair, 1, 1);
         btn_sair.setScreenPercent(70, 10);
         btn_sair.vrPosition.setX(AGScreenManager.iScreenWidth / 2);
         btn_sair.vrPosition.setY(AGScreenManager.iScreenHeight / 3);
