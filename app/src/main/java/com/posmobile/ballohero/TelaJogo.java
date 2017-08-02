@@ -14,6 +14,7 @@ import java.util.Random;
 public class TelaJogo extends AGScene
 {
 
+    AGSprite[] fundo = new AGSprite[2];
     AGSprite balao = null;
 
     List<AGSprite> vetor_emojis = null;
@@ -39,6 +40,15 @@ public class TelaJogo extends AGScene
         createSprite(R.mipmap.sprite_balao, 4, 2).bVisible = false;
         createSprite(R.mipmap.sprite_emoji, 4, 1).bVisible = false;
 
+        for(int i = 0; i < fundo.length; i++)
+        {
+            fundo[i] = createSprite(R.mipmap.fundo, 1, 1);
+            fundo[i].setScreenPercent(100, 100);
+            fundo[i].vrPosition.setX(AGScreenManager.iScreenWidth / 2);
+        }
+        fundo[0].vrPosition.setY(AGScreenManager.iScreenHeight / 2);
+        fundo[1].vrPosition.setY(AGScreenManager.iScreenHeight + fundo[1].getSpriteHeight() / 2);
+
         vetor_cod_inimigos[0] = R.mipmap.sprite_emoji;
         vetor_cod_inimigos[1] = R.mipmap.mamona;
         vetor_cod_inimigos[2] = R.mipmap.prego;
@@ -63,7 +73,6 @@ public class TelaJogo extends AGScene
         balao.addAnimation(15, false, 4, 7);
         balao.vrPosition.setX(AGScreenManager.iScreenWidth / 2);
         balao.vrPosition.setY(balao.getSpriteHeight() / 2);
-//        balao.setCurrentAnimation(1);
     }
 
     @Override
@@ -75,6 +84,8 @@ public class TelaJogo extends AGScene
     @Override
     public void loop()
     {
+        atualizaFundo();
+
         criaInimigo();
 
         atualizaInimigos();
@@ -285,34 +296,63 @@ public class TelaJogo extends AGScene
     {
         for(AGSprite emoji : vetor_emojis)
         {
-            if(balao.collide(emoji))
+            if(emoji.vrPosition.fY >= balao.vrPosition.fY - balao.getSpriteHeight() / 4)
             {
-                balao.setCurrentAnimation(1);
+                if(balao.collide(emoji))
+                {
+                    balao.setCurrentAnimation(1);
+                }
             }
         }
 
         for(AGSprite mamona : vetor_mamonas)
         {
-            if(balao.collide(mamona))
+            if(mamona.vrPosition.fY >= balao.vrPosition.fY - balao.getSpriteHeight() / 4)
             {
-                balao.setCurrentAnimation(1);
+                if(balao.collide(mamona))
+                {
+                    balao.setCurrentAnimation(1);
+                }
             }
         }
 
         for(AGSprite prego : vetor_pregos)
         {
-            if(balao.collide(prego))
+            if(prego.vrPosition.fY >= balao.vrPosition.fY - balao.getSpriteHeight() / 4)
             {
-                balao.setCurrentAnimation(1);
+                if (balao.collide(prego))
+                {
+                    balao.setCurrentAnimation(1);
+                }
             }
         }
 
         for(AGSprite dardo : vetor_dardos)
         {
-            if(balao.collide(dardo))
+            if(dardo.vrPosition.fY >= balao.vrPosition.fY - balao.getSpriteHeight() / 4)
             {
-                balao.setCurrentAnimation(1);
+                if(balao.collide(dardo))
+                {
+                    balao.setCurrentAnimation(1);
+                }
             }
+        }
+    }
+
+    private void atualizaFundo()
+    {
+        fundo[0].vrPosition.fY -= 15;
+        fundo[1].vrPosition.fY -= 15;
+
+        if(fundo[0].vrPosition.fY <= - AGScreenManager.iScreenHeight / 2)
+        {
+            fundo[0].vrPosition.setY(AGScreenManager.iScreenHeight + fundo[0].getSpriteHeight() / 2);
+            fundo[1].vrPosition.setY(AGScreenManager.iScreenHeight / 2);
+        }
+        if(fundo[1].vrPosition.fY <= - AGScreenManager.iScreenHeight / 2)
+        {
+            fundo[1].vrPosition.setY(AGScreenManager.iScreenHeight + fundo[1].getSpriteHeight() / 2);
+            fundo[0].vrPosition.setY(AGScreenManager.iScreenHeight / 2);
         }
     }
 }
