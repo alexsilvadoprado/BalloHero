@@ -18,22 +18,36 @@ public class TelaJogo extends AGScene
     AGSprite barra_superior = null;
     AGSprite[] placar = new AGSprite[6];
     AGSprite balao = null;
+    AGSprite game_over = null;
+    AGSprite bonus_star = null;
+    AGSprite poder_shield = null;
+    AGSprite poder_reducao = null;
+    AGSprite shield = null;
 
     List<AGSprite> vetor_emojis = null;
     List<AGSprite> vetor_mamonas = null;
     List<AGSprite> vetor_pregos = null;
     List<AGSprite> vetor_dardos = null;
 
+    List<AGSprite> vetor_explosao = null;
+
     int[] vetor_cod_inimigos = new int[4];
     int prox_inimigo = 0;
+    int prox_poder = 0;
 
     float[] vetor_pos_inimigos = new float[5];
 
     AGTimer tempo_geracao_inimigos = null;
+    AGTimer tempo_game_over = null;
+    AGTimer tempo_shield = null;
+    AGTimer tempo_reducao = null;
 
     int pontuacao = 0;
     int tempo_pontuacao = 0;
-    boolean game_over = false;
+    boolean is_game_over = false;
+
+    boolean shield_ativo = false;
+    boolean reducao_ativo = false;
 
     TelaJogo(AGGameManager vrManager)
     {
@@ -43,9 +57,18 @@ public class TelaJogo extends AGScene
     @Override
     public void init()
     {
+        prox_inimigo = 0;
+        pontuacao = 0;
+        tempo_pontuacao = 0;
+        is_game_over = false;
+        shield_ativo = false;
+        reducao_ativo = false;
+        prox_poder = new Random().nextInt(2);
+
         createSprite(R.mipmap.sprite_balao, 4, 2).bVisible = false;
         createSprite(R.mipmap.sprite_emoji, 4, 1).bVisible = false;
         createSprite(R.mipmap.barra_superior, 1, 1).bVisible = false;
+        createSprite(R.mipmap.explosao, 4, 2).bVisible = false;
 
         for(int i = 0; i < fundo.length; i++)
         {
@@ -78,7 +101,12 @@ public class TelaJogo extends AGScene
         vetor_pregos = new ArrayList<AGSprite>();
         vetor_dardos = new ArrayList<AGSprite>();
 
+        vetor_explosao = new ArrayList<AGSprite>();
+
         tempo_geracao_inimigos = new AGTimer(1000);
+        tempo_game_over = new AGTimer(1500);
+        tempo_shield = new AGTimer(5000);
+        tempo_reducao = new AGTimer(5000);
 
         int multiplicador = 1;
         for(int pos = 0; pos < placar.length; pos++)
@@ -102,6 +130,29 @@ public class TelaJogo extends AGScene
         balao.addAnimation(15, false, 4, 7);
         balao.vrPosition.setX(AGScreenManager.iScreenWidth / 2);
         balao.vrPosition.setY(balao.getSpriteHeight() / 2);
+
+        bonus_star = createSprite(R.mipmap.estrela, 1, 1);
+        bonus_star.setScreenPercent(15, 8);
+        bonus_star.bVisible = false;
+
+        poder_shield = createSprite(R.mipmap.shield, 1, 1);
+        poder_shield.setScreenPercent(10, 10);
+        poder_shield.bVisible = false;
+
+        poder_reducao = createSprite(R.mipmap.balloon_icon, 1, 1);
+        poder_reducao.setScreenPercent(10, 10);
+        poder_reducao.bVisible = false;
+
+        shield = createSprite(R.mipmap.bolha, 1, 1);
+        shield.setScreenPercent(25, 25);
+        shield.bVisible = false;
+
+        game_over = createSprite(R.mipmap.game_over, 1, 1);
+        game_over.setScreenPercent(100, 40);
+        game_over.vrPosition.setX(AGScreenManager.iScreenWidth / 2);
+        game_over.vrPosition.setY(AGScreenManager.iScreenHeight / 2);
+        game_over.bVisible = false;
+        game_over.bAutoRender = false;
     }
 
     @Override
@@ -109,6 +160,8 @@ public class TelaJogo extends AGScene
     {
         super.render();
         barra_superior.render();
+
+        game_over.render();
 
         for(AGSprite digito : placar)
         {
@@ -131,11 +184,87 @@ public class TelaJogo extends AGScene
 
         atualizaInimigos();
 
-        verificaToque();
+        atualizaPoderes();
 
         verificaColisao();
 
+        verificaToque();
+
         atualizaPlacar();
+
+        criarEstrelaBonus();
+
+        colisaoEstrelaBonus();
+
+        animacaoGameOver();
+    }
+
+    private void criarEstrelaBonus()
+    {
+        if(pontuacao == 0)
+            return;
+
+        if(pontuacao%1000 == 0)
+        {
+            bonus_star.bVisible = true;
+            bonus_star.vrPosition.setX(vetor_pos_inimigos[new Random().nextInt(5)]);
+            bonus_star.vrPosition.setY(AGScreenManager.iScreenHeight + bonus_star.getSpriteHeight() / 2);
+        }
+    }
+
+    private void colisaoEstrelaBonus()
+    {
+        if(!bonus_star.bVisible || poder_reducao.bVisible || poder_shield.bVisible)
+            return;
+
+        bonus_star.vrPosition.fY -= 10;
+
+        if(balao.collide(bonus_star))
+        {
+            bonus_star.bVisible = false;
+            if(prox_poder == 0)
+            {
+                poder_shield.bVisible = true;
+                poder_shield.vrPosition.setX(balao.vrPosition.fX);
+                poder_shield.vrPosition.setY(balao.vrPosition.fY);
+                prox_poder = 1;
+            } else
+            {
+                poder_reducao.bVisible = true;
+                poder_reducao.vrPosition.setX(balao.vrPosition.fX);
+                poder_reducao.vrPosition.setY(balao.vrPosition.fY);
+                prox_poder = 0;
+            }
+        }
+    }
+
+    private void atualizaPoderes()
+    {
+        if(shield_ativo)
+        {
+            tempo_shield.update();
+
+            if(tempo_shield.isTimeEnded())
+            {
+                tempo_shield.restart();
+                shield_ativo = false;
+                shield.bVisible = false;
+            }
+            return;
+        }
+
+        if(reducao_ativo)
+        {
+            tempo_reducao.update();
+
+            if(tempo_reducao.isTimeEnded())
+            {
+                tempo_reducao.restart();
+                reducao_ativo = false;
+                balao.setScreenPercent(20, 20);
+            }
+            return;
+        }
     }
 
     private void criaInimigo()
@@ -160,6 +289,25 @@ public class TelaJogo extends AGScene
         } else if (prox_inimigo == 3)
         {
             criaDardo();
+        }
+    }
+
+    private void animacaoGameOver()
+    {
+        if(!is_game_over)
+            return;
+
+        if(game_over.fadeEnded())
+        {
+            pontuacao += tempo_pontuacao;
+            tempo_pontuacao = 0;
+            tempo_game_over.update();
+
+            if(tempo_game_over.isTimeEnded())
+            {
+                vrGameManager.setCurrentScene(1);
+                return;
+            }
         }
     }
 
@@ -275,7 +423,7 @@ public class TelaJogo extends AGScene
             emoji.vrPosition.fY -= 15;
             if(emoji.vrPosition.fY < ((emoji.getSpriteHeight() / 2) * -1))
             {
-                if(emoji.bVisible)
+                if(emoji.bVisible && !is_game_over)
                     tempo_pontuacao += 50;
                 emoji.bRecycled = true;
                 emoji.bVisible = false;
@@ -287,7 +435,7 @@ public class TelaJogo extends AGScene
             mamona.vrPosition.fY -= 15;
             if(mamona.vrPosition.fY < ((mamona.getSpriteHeight() / 2) * -1))
             {
-                if(mamona.bVisible)
+                if(mamona.bVisible && !is_game_over)
                     tempo_pontuacao += 50;
                 mamona.bRecycled = true;
                 mamona.bVisible = false;
@@ -299,7 +447,7 @@ public class TelaJogo extends AGScene
             prego.vrPosition.fY -= 15;
             if(prego.vrPosition.fY < ((prego.getSpriteHeight() / 2) * -1))
             {
-                if(prego.bVisible)
+                if(prego.bVisible && !is_game_over)
                     tempo_pontuacao += 50;
                 prego.bRecycled = true;
                 prego.bVisible = false;
@@ -311,7 +459,7 @@ public class TelaJogo extends AGScene
             dardo.vrPosition.fY -= 15;
             if(dardo.vrPosition.fY < ((dardo.getSpriteHeight() / 2) * -1))
             {
-                if(dardo.bVisible)
+                if(dardo.bVisible && !is_game_over)
                     tempo_pontuacao += 50;
                 dardo.bRecycled = true;
                 dardo.bVisible = false;
@@ -321,11 +469,42 @@ public class TelaJogo extends AGScene
 
     private void verificaToque()
     {
-        if(AGInputManager.vrTouchEvents.screenClicked())
+        if(AGInputManager.vrTouchEvents.screenClicked() || AGInputManager.vrTouchEvents.screenDown() && !is_game_over)
         {
-            if(AGInputManager.vrTouchEvents.getLastPosition().fX < AGScreenManager.iScreenWidth / 2)
+            if(balao.collide(AGInputManager.vrTouchEvents.getLastPosition()))
             {
+                if(poder_shield.bVisible)
+                {
+                    poder_shield.bVisible = false;
+                    shield_ativo = true;
+                    shield.bVisible = true;
+                    shield.vrPosition.setX(balao.vrPosition.fX);
+                    shield.vrPosition.setY(balao.vrPosition.fY);
+                    return;
+                } else if(poder_reducao.bVisible)
+                {
+                    poder_reducao.bVisible = false;
+                    reducao_ativo = true;
+                    balao.setScreenPercent(10, 10);
+                    return;
+                }
+            }
+
+            if(AGInputManager.vrTouchEvents.getLastPosition().fX < balao.vrPosition.fX)
+            {
+                if(AGInputManager.vrTouchEvents.getLastPosition().fY > balao.vrPosition.fY + balao.getSpriteHeight() / 2)
+                    return;
+
+                criaExplosao(balao.vrPosition.fX - balao.getSpriteWidth(), balao.vrPosition.fY);
                 balao.vrPosition.fX += 50;
+                if(poder_shield.bVisible || poder_reducao.bVisible)
+                {
+                    poder_shield.vrPosition.fX += 50;
+                    poder_reducao.vrPosition.fX += 50;
+                }
+
+                if(shield.bVisible)
+                    shield.vrPosition.fX += 50;
 
                 if(balao.vrPosition.getX() > AGScreenManager.iScreenWidth - balao.getSpriteWidth() / 2)
                 {
@@ -333,7 +512,56 @@ public class TelaJogo extends AGScene
                 }
             } else
             {
+                if(AGInputManager.vrTouchEvents.getLastPosition().fY > balao.vrPosition.fY + balao.getSpriteHeight() / 2)
+                    return;
+
+                criaExplosao(balao.vrPosition.fX + balao.getSpriteWidth(), balao.vrPosition.fY);
                 balao.vrPosition.fX -= 50;
+                if(poder_shield.bVisible || poder_reducao.bVisible)
+                {
+                    poder_shield.vrPosition.fX -= 50;
+                    poder_reducao.vrPosition.fX -= 50;
+                }
+
+                if(shield.bVisible)
+                    shield.vrPosition.fX -= 50;
+
+                if(balao.vrPosition.getX() < balao.getSpriteWidth() / 2)
+                {
+                    balao.vrPosition.setX(balao.getSpriteWidth() / 2);
+                }
+            }
+        } else if(!AGInputManager.vrTouchEvents.screenDown())
+        {
+            if(AGInputManager.vrTouchEvents.getLastPosition().fX < balao.vrPosition.fX)
+            {
+                criaExplosao(balao.vrPosition.fX - balao.getSpriteWidth(), balao.vrPosition.fY);
+                balao.vrPosition.fX += 10;
+                if(poder_shield.bVisible || poder_reducao.bVisible)
+                {
+                    poder_shield.vrPosition.fX += 10;
+                    poder_reducao.vrPosition.fX += 10;
+                }
+
+                if(shield.bVisible)
+                    shield.vrPosition.fX += 10;
+
+                if(balao.vrPosition.getX() > AGScreenManager.iScreenWidth - balao.getSpriteWidth() / 2)
+                {
+                    balao.vrPosition.setX(AGScreenManager.iScreenWidth - balao.getSpriteWidth() / 2);
+                }
+            } else
+            {
+                criaExplosao(balao.vrPosition.fX + balao.getSpriteWidth(), balao.vrPosition.fY);
+                balao.vrPosition.fX -= 10;
+                if(poder_shield.bVisible || poder_reducao.bVisible)
+                {
+                    poder_shield.vrPosition.fX -= 10;
+                    poder_reducao.vrPosition.fX -= 10;
+                }
+
+                if(shield.bVisible)
+                    shield.vrPosition.fX -= 10;
 
                 if(balao.vrPosition.getX() < balao.getSpriteWidth() / 2)
                 {
@@ -345,46 +573,101 @@ public class TelaJogo extends AGScene
 
     private void verificaColisao()
     {
+        if(is_game_over)
+            return;
+
         for(AGSprite emoji : vetor_emojis)
         {
+            if(shield.bVisible)
+            {
+                if(shield.collide(emoji))
+                {
+                    emoji.bVisible = false;
+                    emoji.bRecycled = true;
+                    return;
+                }
+            }
             if(emoji.vrPosition.fY >= balao.vrPosition.fY - balao.getSpriteHeight() / 4)
             {
-                if(balao.collide(emoji))
+                if(balao.collide(emoji) && !emoji.bRecycled)
                 {
                     balao.setCurrentAnimation(1);
+                    poder_shield.bVisible = false;
+                    poder_reducao.bVisible = false;
+                    is_game_over = true;
+                    game_over.fadeIn(2000);
                 }
             }
         }
 
         for(AGSprite mamona : vetor_mamonas)
         {
+            if(shield.bVisible)
+            {
+                if(shield.collide(mamona))
+                {
+                    mamona.bVisible = false;
+                    mamona.bRecycled = true;
+                    return;
+                }
+            }
             if(mamona.vrPosition.fY >= balao.vrPosition.fY - balao.getSpriteHeight() / 4)
             {
-                if(balao.collide(mamona))
+                if(balao.collide(mamona) && !mamona.bRecycled)
                 {
                     balao.setCurrentAnimation(1);
+                    poder_shield.bVisible = false;
+                    poder_reducao.bVisible = false;
+                    is_game_over = true;
+                    game_over.fadeIn(2000);
                 }
             }
         }
 
         for(AGSprite prego : vetor_pregos)
         {
+            if(shield.bVisible)
+            {
+                if(shield.collide(prego))
+                {
+                    prego.bVisible = false;
+                    prego.bRecycled = true;
+                    return;
+                }
+            }
             if(prego.vrPosition.fY >= balao.vrPosition.fY - balao.getSpriteHeight() / 4)
             {
-                if (balao.collide(prego))
+                if (balao.collide(prego) && !prego.bRecycled)
                 {
                     balao.setCurrentAnimation(1);
+                    poder_shield.bVisible = false;
+                    poder_reducao.bVisible = false;
+                    is_game_over = true;
+                    game_over.fadeIn(2000);
                 }
             }
         }
 
         for(AGSprite dardo : vetor_dardos)
         {
+            if(shield.bVisible)
+            {
+                if(shield.collide(dardo))
+                {
+                    dardo.bVisible = false;
+                    dardo.bRecycled = true;
+                    return;
+                }
+            }
             if(dardo.vrPosition.fY >= balao.vrPosition.fY - balao.getSpriteHeight() / 4)
             {
-                if(balao.collide(dardo))
+                if(balao.collide(dardo) && !dardo.bRecycled)
                 {
                     balao.setCurrentAnimation(1);
+                    poder_shield.bVisible = false;
+                    poder_reducao.bVisible = false;
+                    is_game_over = true;
+                    game_over.fadeIn(2000);
                 }
             }
         }
@@ -421,5 +704,28 @@ public class TelaJogo extends AGScene
         placar[2].setCurrentAnimation((pontuacao % 10000) / 1000);
         placar[1].setCurrentAnimation((pontuacao % 100000) / 10000);
         placar[0].setCurrentAnimation(pontuacao / 100000);
+    }
+
+    private void criaExplosao(float x, float y)
+    {
+        for(AGSprite current : vetor_explosao)
+        {
+            if(current.bRecycled)
+            {
+                current.bRecycled = false;
+                current.bVisible = true;
+                current.vrPosition.setX(x);
+                current.vrPosition.setY(y);
+
+                return;
+            }
+        }
+
+        AGSprite nova_explosao = createSprite(R.mipmap.explosao, 4, 2);
+        nova_explosao.setScreenPercent(20, 20);
+        nova_explosao.addAnimation(20, false, 0, 5);
+        nova_explosao.vrPosition.setX(x);
+        nova_explosao.vrPosition.setY(y);
+        vetor_explosao.add(nova_explosao);
     }
 }
