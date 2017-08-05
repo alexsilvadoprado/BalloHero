@@ -4,6 +4,7 @@ import com.posmobile.ballohero.AndGraph.AGGameManager;
 import com.posmobile.ballohero.AndGraph.AGInputManager;
 import com.posmobile.ballohero.AndGraph.AGScene;
 import com.posmobile.ballohero.AndGraph.AGScreenManager;
+import com.posmobile.ballohero.AndGraph.AGSoundManager;
 import com.posmobile.ballohero.AndGraph.AGSprite;
 import com.posmobile.ballohero.AndGraph.AGTimer;
 
@@ -49,6 +50,8 @@ public class TelaJogo extends AGScene
     boolean shield_ativo = false;
     boolean reducao_ativo = false;
 
+    int efeito_boom = 0;
+
     TelaJogo(AGGameManager vrManager)
     {
         super(vrManager);
@@ -68,7 +71,7 @@ public class TelaJogo extends AGScene
         createSprite(R.mipmap.sprite_balao, 4, 2).bVisible = false;
         createSprite(R.mipmap.sprite_emoji, 4, 1).bVisible = false;
         createSprite(R.mipmap.barra_superior, 1, 1).bVisible = false;
-        createSprite(R.mipmap.explosao, 4, 2).bVisible = false;
+        createSprite(R.mipmap.wind, 4, 3).bVisible = false;
 
         for(int i = 0; i < fundo.length; i++)
         {
@@ -153,6 +156,11 @@ public class TelaJogo extends AGScene
         game_over.vrPosition.setY(AGScreenManager.iScreenHeight / 2);
         game_over.bVisible = false;
         game_over.bAutoRender = false;
+
+        AGSoundManager.vrMusic.loadMusic("wind.wav", true);
+        AGSoundManager.vrMusic.play();
+
+        efeito_boom = AGSoundManager.vrSoundEffects.loadSoundEffect("boom.wav");
     }
 
     @Override
@@ -469,7 +477,7 @@ public class TelaJogo extends AGScene
 
     private void verificaToque()
     {
-        if(AGInputManager.vrTouchEvents.screenClicked() || AGInputManager.vrTouchEvents.screenDown() && !is_game_over)
+        if(AGInputManager.vrTouchEvents.screenClicked() && !is_game_over)
         {
             if(balao.collide(AGInputManager.vrTouchEvents.getLastPosition()))
             {
@@ -490,12 +498,9 @@ public class TelaJogo extends AGScene
                 }
             }
 
-            if(AGInputManager.vrTouchEvents.getLastPosition().fX < balao.vrPosition.fX)
+            if(AGInputManager.vrTouchEvents.getLastPosition().fX < AGScreenManager.iScreenWidth / 2)
             {
-                if(AGInputManager.vrTouchEvents.getLastPosition().fY > balao.vrPosition.fY + balao.getSpriteHeight() / 2)
-                    return;
-
-                criaExplosao(balao.vrPosition.fX - balao.getSpriteWidth(), balao.vrPosition.fY);
+                criaExplosao(balao.vrPosition.fX - balao.getSpriteWidth(), balao.vrPosition.fY, false);
                 balao.vrPosition.fX += 50;
                 if(poder_shield.bVisible || poder_reducao.bVisible)
                 {
@@ -503,19 +508,16 @@ public class TelaJogo extends AGScene
                     poder_reducao.vrPosition.fX += 50;
                 }
 
-                if(shield.bVisible)
-                    shield.vrPosition.fX += 50;
-
                 if(balao.vrPosition.getX() > AGScreenManager.iScreenWidth - balao.getSpriteWidth() / 2)
                 {
                     balao.vrPosition.setX(AGScreenManager.iScreenWidth - balao.getSpriteWidth() / 2);
                 }
+
+                if(shield.bVisible)
+                    shield.vrPosition.setX(balao.vrPosition.fX);
             } else
             {
-                if(AGInputManager.vrTouchEvents.getLastPosition().fY > balao.vrPosition.fY + balao.getSpriteHeight() / 2)
-                    return;
-
-                criaExplosao(balao.vrPosition.fX + balao.getSpriteWidth(), balao.vrPosition.fY);
+                criaExplosao(balao.vrPosition.fX + balao.getSpriteWidth(), balao.vrPosition.fY, true);
                 balao.vrPosition.fX -= 50;
                 if(poder_shield.bVisible || poder_reducao.bVisible)
                 {
@@ -523,50 +525,13 @@ public class TelaJogo extends AGScene
                     poder_reducao.vrPosition.fX -= 50;
                 }
 
-                if(shield.bVisible)
-                    shield.vrPosition.fX -= 50;
-
                 if(balao.vrPosition.getX() < balao.getSpriteWidth() / 2)
                 {
                     balao.vrPosition.setX(balao.getSpriteWidth() / 2);
                 }
-            }
-        } else if(!AGInputManager.vrTouchEvents.screenDown())
-        {
-            if(AGInputManager.vrTouchEvents.getLastPosition().fX < balao.vrPosition.fX)
-            {
-                criaExplosao(balao.vrPosition.fX - balao.getSpriteWidth(), balao.vrPosition.fY);
-                balao.vrPosition.fX += 10;
-                if(poder_shield.bVisible || poder_reducao.bVisible)
-                {
-                    poder_shield.vrPosition.fX += 10;
-                    poder_reducao.vrPosition.fX += 10;
-                }
 
                 if(shield.bVisible)
-                    shield.vrPosition.fX += 10;
-
-                if(balao.vrPosition.getX() > AGScreenManager.iScreenWidth - balao.getSpriteWidth() / 2)
-                {
-                    balao.vrPosition.setX(AGScreenManager.iScreenWidth - balao.getSpriteWidth() / 2);
-                }
-            } else
-            {
-                criaExplosao(balao.vrPosition.fX + balao.getSpriteWidth(), balao.vrPosition.fY);
-                balao.vrPosition.fX -= 10;
-                if(poder_shield.bVisible || poder_reducao.bVisible)
-                {
-                    poder_shield.vrPosition.fX -= 10;
-                    poder_reducao.vrPosition.fX -= 10;
-                }
-
-                if(shield.bVisible)
-                    shield.vrPosition.fX -= 10;
-
-                if(balao.vrPosition.getX() < balao.getSpriteWidth() / 2)
-                {
-                    balao.vrPosition.setX(balao.getSpriteWidth() / 2);
-                }
+                    shield.vrPosition.setX(balao.vrPosition.fX);
             }
         }
     }
@@ -591,6 +556,7 @@ public class TelaJogo extends AGScene
             {
                 if(balao.collide(emoji) && !emoji.bRecycled)
                 {
+                    AGSoundManager.vrSoundEffects.play(efeito_boom);
                     balao.setCurrentAnimation(1);
                     poder_shield.bVisible = false;
                     poder_reducao.bVisible = false;
@@ -615,6 +581,7 @@ public class TelaJogo extends AGScene
             {
                 if(balao.collide(mamona) && !mamona.bRecycled)
                 {
+                    AGSoundManager.vrSoundEffects.play(efeito_boom);
                     balao.setCurrentAnimation(1);
                     poder_shield.bVisible = false;
                     poder_reducao.bVisible = false;
@@ -639,6 +606,7 @@ public class TelaJogo extends AGScene
             {
                 if (balao.collide(prego) && !prego.bRecycled)
                 {
+                    AGSoundManager.vrSoundEffects.play(efeito_boom);
                     balao.setCurrentAnimation(1);
                     poder_shield.bVisible = false;
                     poder_reducao.bVisible = false;
@@ -663,6 +631,7 @@ public class TelaJogo extends AGScene
             {
                 if(balao.collide(dardo) && !dardo.bRecycled)
                 {
+                    AGSoundManager.vrSoundEffects.play(efeito_boom);
                     balao.setCurrentAnimation(1);
                     poder_shield.bVisible = false;
                     poder_reducao.bVisible = false;
@@ -706,7 +675,7 @@ public class TelaJogo extends AGScene
         placar[0].setCurrentAnimation(pontuacao / 100000);
     }
 
-    private void criaExplosao(float x, float y)
+    private void criaExplosao(float x, float y, boolean espelhado)
     {
         for(AGSprite current : vetor_explosao)
         {
@@ -716,16 +685,18 @@ public class TelaJogo extends AGScene
                 current.bVisible = true;
                 current.vrPosition.setX(x);
                 current.vrPosition.setY(y);
+                current.iMirror = espelhado ? AGSprite.HORIZONTAL : AGSprite.NONE;
 
                 return;
             }
         }
 
-        AGSprite nova_explosao = createSprite(R.mipmap.explosao, 4, 2);
+        AGSprite nova_explosao = createSprite(R.mipmap.wind, 4, 3);
         nova_explosao.setScreenPercent(20, 20);
-        nova_explosao.addAnimation(20, false, 0, 5);
+        nova_explosao.addAnimation(20, false, 0, 11);
         nova_explosao.vrPosition.setX(x);
         nova_explosao.vrPosition.setY(y);
+        nova_explosao.iMirror = espelhado ? AGSprite.HORIZONTAL : AGSprite.NONE;
         vetor_explosao.add(nova_explosao);
     }
 }

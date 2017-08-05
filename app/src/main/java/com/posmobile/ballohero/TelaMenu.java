@@ -4,11 +4,12 @@ import com.posmobile.ballohero.AndGraph.AGGameManager;
 import com.posmobile.ballohero.AndGraph.AGInputManager;
 import com.posmobile.ballohero.AndGraph.AGScene;
 import com.posmobile.ballohero.AndGraph.AGScreenManager;
+import com.posmobile.ballohero.AndGraph.AGSoundManager;
 import com.posmobile.ballohero.AndGraph.AGSprite;
 
 public class TelaMenu extends AGScene
 {
-
+    // Declaracao de variáveis
     AGSprite plano_fundo = null;
     AGSprite arte_game = null;
     AGSprite btn_play = null;
@@ -47,6 +48,9 @@ public class TelaMenu extends AGScene
         btn_sair.setScreenPercent(70, 10);
         btn_sair.vrPosition.setX(AGScreenManager.iScreenWidth / 2);
         btn_sair.vrPosition.setY(btn_sobre.vrPosition.fY - btn_sair.getSpriteHeight() * 1.5f);
+
+        AGSoundManager.vrMusic.loadMusic("musica.mp3", true);
+        AGSoundManager.vrMusic.play();
     }
 
     @Override
@@ -63,6 +67,18 @@ public class TelaMenu extends AGScene
             if(btn_play.collide(AGInputManager.vrTouchEvents.getLastPosition()))
             {
                 vrGameManager.setCurrentScene(2);
+                return;
+            }
+
+            if(btn_sobre.collide(AGInputManager.vrTouchEvents.getLastPosition()))
+            {
+                vrGameManager.setCurrentScene(3);
+                return;
+            }
+
+            if(btn_sair.collide(AGInputManager.vrTouchEvents.getLastPosition()))
+            {
+                vrGameManager.vrActivity.finish();
                 return;
             }
         }
